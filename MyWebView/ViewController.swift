@@ -7,10 +7,13 @@
 //
 
 import UIKit
+import WebKit
 
-class ViewController: UIViewController, UITextFieldDelegate, UIWebViewDelegate{
+class ViewController: UIViewController, UITextFieldDelegate, WKNavigationDelegate{
 
-    @IBOutlet weak var webView: UIWebView!
+    @IBOutlet weak var toolBar: UIToolbar!
+    
+    var webView=WKWebView()
     
     @IBOutlet weak var urlText: UITextField!
     
@@ -20,10 +23,26 @@ class ViewController: UIViewController, UITextFieldDelegate, UIWebViewDelegate{
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        webView.delegate = self
+        self.view.addSubview(webView)
+        
+
+        webView.translatesAutoresizingMaskIntoConstraints=false
+        webView.topAnchor.constraint(equalTo: urlText.bottomAnchor).isActive = true
+        webView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        webView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        webView.bottomAnchor.constraint(equalTo: toolBar.topAnchor).isActive = true
+        
+        webView.layer.zPosition = -1
+        
+        webView.navigationDelegate = self
+        
         urlText.delegate = self
         
         indicator.hidesWhenStopped = true
+        
+//        UIApplication.shared.isNetworkActivityIndicatorVisible = true
+
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -31,18 +50,24 @@ class ViewController: UIViewController, UITextFieldDelegate, UIWebViewDelegate{
         // Dispose of any resources that can be recreated.
     }
 
-    func webViewDidStartLoad(_ webView: UIWebView) {
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         self.indicator.startAnimating()
+
     }
     
-    func webViewDidFinishLoad(_ webView: UIWebView) {
-            self.indicator.stopAnimating()
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            decisionHandler(WKNavigationActionPolicy.allow);
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        self.indicator.stopAnimating()
+
     }
 
     func textFieldDidEndEditing(_ textField: UITextField) {
         
         if let urlString = self.urlText.text{
-            self.webView.loadRequest(URLRequest(url: URL(string: urlString)!))
+            self.webView.load(URLRequest(url: URL(string: urlString)!))
         }
         
     }
